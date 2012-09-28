@@ -75,13 +75,14 @@
 		
 		_queue = dispatch_queue_create([name cStringUsingEncoding:NSUTF8StringEncoding], DISPATCH_QUEUE_SERIAL);
 		
-		_fileManager = [[NSFileManager alloc] init];		
+		_fileManager = [[NSFileManager alloc] init];
 		NSString *cachesDirectory = [NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES) lastObject];
 		_cacheDirectory = [[cachesDirectory stringByAppendingFormat:@"/com.syntheticcorp.sycache/%@", name] retain];
 		
 		if (![_fileManager fileExistsAtPath:_cacheDirectory]) {
 			[_fileManager createDirectoryAtPath:_cacheDirectory withIntermediateDirectories:YES attributes:nil error:nil];
 		}
+        
 	}
 	return self;
 }
@@ -200,11 +201,11 @@
 }
 
 - (NSString *)_sanitizeFileNameString:(NSString *)fileName {
-    static NSCharacterSet *illegalFileNameCharacters = nil;
-    
+  static NSCharacterSet *illegalFileNameCharacters = nil;
+  
 	static dispatch_once_t illegalCharacterCreationToken;
 	dispatch_once(&illegalCharacterCreationToken, ^{
-		illegalFileNameCharacters = [NSCharacterSet characterSetWithCharactersInString: @"/\\?%*|\"<>:" ];
+		illegalFileNameCharacters = [[NSCharacterSet characterSetWithCharactersInString: @"/\\?%*|\"<>:/" ] retain];
 	});
 
 	return [ [fileName componentsSeparatedByCharactersInSet: illegalFileNameCharacters] componentsJoinedByString: @""];
@@ -266,7 +267,7 @@
 	
 	key = [[self class] _keyForImageKey:key];
 	
-	dispatch_async(_queue, ^{		
+	dispatch_async(_queue, ^{
 		NSString *path = [self _pathForKey:key];
 		
 		// Stop if in memory cache or disk cache
@@ -279,7 +280,7 @@
 		
 		// Save to disk cache
 		[UIImagePNGRepresentation(image) writeToFile:path atomically:YES];
-	});	
+	});
 }
 
 #pragma mark - Private
@@ -288,7 +289,7 @@
 	NSString *scale = [[UIScreen mainScreen] scale] == 2.0f ? @"@2x" : @"";
 	return [imageKey stringByAppendingFormat:@"%@.png", scale];
 }
-		   
+
 #endif
 
 @end
