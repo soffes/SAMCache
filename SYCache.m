@@ -194,9 +194,21 @@
 #pragma mark - Private
 
 - (NSString *)_pathForKey:(NSString *)key {
+	key = [self _sanitizeFileNameString: key];
+	
 	return [_cacheDirectory stringByAppendingPathComponent:key];
 }
 
+- (NSString *)_sanitizeFileNameString:(NSString *)fileName {
+    static NSCharacterSet *illegalFileNameCharacters = nil;
+    
+	static dispatch_once_t illegalCharacterCreationToken;
+	dispatch_once(&illegalCharacterCreationToken, ^{
+		illegalFileNameCharacters = [NSCharacterSet characterSetWithCharactersInString: @"/\\?%*|\"<>:" ];
+	});
+
+	return [ [fileName componentsSeparatedByCharactersInSet: illegalFileNameCharacters] componentsJoinedByString: @""];
+}
 @end
 
 
