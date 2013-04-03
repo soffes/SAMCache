@@ -148,9 +148,11 @@
 		NSString *path = [self _pathForKey:key];
 		
 		// Stop if in memory cache or disk cache
-		if (([_cache objectForKey:key] != nil) || [_fileManager fileExistsAtPath:path]) {
-			return;
-		}
+	    id cachedObject = [_cache objectForKey:key];
+	    if ( [cachedObject isEqual:object] && [_fileManager fileExistsAtPath:path]) {
+	      return;
+	    }
+
 		
 		// Save to memory cache
 		[_cache setObject:object forKey:key];
@@ -192,11 +194,23 @@
 
 
 #pragma mark - Private
-
-- (NSString *)_pathForKey:(NSString *)key {
-	return [_cacheDirectory stringByAppendingPathComponent:key];
+//Remove illegals "Filename" Characters from the filename String
+- (NSString *)_sanitizeFileNameString:(NSString *)fileName {
+  static NSCharacterSet *illegalFileNameCharacters = nil;
+  
+	static dispatch_once_t illegalCharacterCreationToken;
+	dispatch_once(&illegalCharacterCreationToken, ^{
+		illegalFileNameCharacters = [[NSCharacterSet characterSetWithCharactersInString: @"/\\?%*|\"<>:/" ] retain];
+	});
+  
+	return [ [fileName componentsSeparatedByCharactersInSet: illegalFileNameCharacters] componentsJoinedByString: @""];
 }
 
+- (NSString *)_pathForKey:(NSString *)key {
+  key = [self _sanitizeFileNameString: key];
+
+	return [_cacheDirectory stringByAppendingPathComponent:key];
+}
 @end
 
 
@@ -258,9 +272,11 @@
 		NSString *path = [self _pathForKey:key];
 		
 		// Stop if in memory cache or disk cache
-		if (([_cache objectForKey:key] != nil) || [_fileManager fileExistsAtPath:path]) {
-			return;
-		}
+	    id cachedObject = [_cache objectForKey:key];
+	    if ( [cachedObject isEqual:image] && [_fileManager fileExistsAtPath:path]) {
+	      return;
+	    }
+
 		
 		// Save to memory cache
 		[_cache setObject:image forKey:key];
