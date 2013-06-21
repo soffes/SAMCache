@@ -25,29 +25,27 @@
 
 - (id)init {
 	NSLog(@"[SYCache] You must initalize SYCache using `initWithName:`.");
-	[self autorelease];
 	return nil;
 }
 
 
 - (void)dealloc {
 	[_cache removeAllObjects];
-	[_cache release];
 	_cache = nil;
 	
-	dispatch_release(_queue);
+#if __IPHONE_OS_VERSION_MIN_REQUIRED < __IPHONE_6_0
+  //http://stackoverflow.com/questions/8618632/does-arc-support-dispatch-queues
+  dispatch_release(_queue);
+#endif
+	
+  
 	_queue = nil;
 	
-	[_name release];
 	_name = nil;
 	
-	[_fileManager release];
 	_fileManager = nil;
 	
-	[_cacheDirectory release];
-	_cacheDirectory = nil;
-	
-	[super dealloc];
+	_cacheDirectory = nil;	
 }
 
 
@@ -77,7 +75,7 @@
 		
 		_fileManager = [[NSFileManager alloc] init];		
 		NSString *cachesDirectory = [NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES) lastObject];
-		_cacheDirectory = [[cachesDirectory stringByAppendingFormat:@"/com.syntheticcorp.sycache/%@", name] retain];
+		_cacheDirectory = [cachesDirectory stringByAppendingFormat:@"/com.syntheticcorp.sycache/%@", name];
 		
 		if (![_fileManager fileExistsAtPath:_cacheDirectory]) {
 			[_fileManager createDirectoryAtPath:_cacheDirectory withIntermediateDirectories:YES attributes:nil error:nil];
@@ -113,13 +111,14 @@
 
 - (void)objectForKey:(NSString *)key usingBlock:(void (^)(id object))block {
 	dispatch_sync(_queue, ^{
-		id object = [[_cache objectForKey:key] retain];
+		id object = [_cache objectForKey:key];
 		if (!object) {
-			object = [[NSKeyedUnarchiver unarchiveObjectWithFile:[self _pathForKey:key]] retain];
+			object = [NSKeyedUnarchiver unarchiveObjectWithFile:[self _pathForKey:key]];
 			[_cache setObject:object forKey:key];
 		}
 		
-		block([object autorelease]);
+    __block id blockObject = object;
+		block(blockObject);
 	});
 }
 
@@ -200,8 +199,12 @@
   
 	static dispatch_once_t illegalCharacterCreationToken;
 	dispatch_once(&illegalCharacterCreationToken, ^{
-		illegalFileNameCharacters = [[NSCharacterSet characterSetWithCharactersInString: @"/\\?%*|\"<>:/" ] retain];
+		illegalFileNameCharacters = [NSCharacterSet characterSetWithCharactersInString: @"/\\?%*|\"<>:/" ];
 	});
+  
+  if (!illegalFileNameCharacters) {
+    return fileName;
+  }
   
 	return [ [fileName componentsSeparatedByCharactersInSet: illegalFileNameCharacters] componentsJoinedByString: @""];
 }
@@ -250,13 +253,13 @@
 	key = [[self class] _keyForImageKey:key];
 	
 	dispatch_sync(_queue, ^{
-		UIImage *image = [[_cache objectForKey:key] retain];
+		UIImage *image = [_cache objectForKey:key];
 		if (!image) {
 			image = [[UIImage alloc] initWithContentsOfFile:[self _pathForKey:key]];
 			[_cache setObject:image forKey:key];
 		}
-		
-		block([image autorelease]);
+		__block UIImage *blockImage = image;
+		block(blockImage);
 	});
 }
 
