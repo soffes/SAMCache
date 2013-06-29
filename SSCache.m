@@ -105,6 +105,10 @@
 
 	// Load object from disk
 	object = [NSKeyedUnarchiver unarchiveObjectWithFile:path];
+	if (!object) {
+		// Object was removed from disk before we could read it
+		return nil;
+	}
 
 	// Store in cache
 	[_cache setObject:object forKey:key];
