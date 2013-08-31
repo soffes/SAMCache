@@ -118,7 +118,7 @@
 
 
 - (void)objectForKey:(NSString *)key usingBlock:(void (^)(id object))block {
-	dispatch_sync(_queue, ^{
+	dispatch_async(_queue, ^{
 		id object = [_cache objectForKey:key];
 		if (!object) {
 			object = [NSKeyedUnarchiver unarchiveObjectWithFile:[self _pathForKey:key]];
