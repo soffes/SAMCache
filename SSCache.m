@@ -122,7 +122,7 @@
 		id object = [_cache objectForKey:key];
 		if (!object) {
 			object = [NSKeyedUnarchiver unarchiveObjectWithFile:[self _pathForKey:key]];
-			[_cache setObject:object forKey:key];
+			if(object) [_cache setObject:object forKey:key];
 		}
 
     __block id blockObject = object;
@@ -264,7 +264,7 @@
 		UIImage *image = [_cache objectForKey:key];
 		if (!image) {
 			image = [[UIImage alloc] initWithContentsOfFile:[self _pathForKey:key]];
-			[_cache setObject:image forKey:key];
+			if(image) [_cache setObject:image forKey:key];
 		}
 		__block UIImage *blockImage = image;
 		block(blockImage);
