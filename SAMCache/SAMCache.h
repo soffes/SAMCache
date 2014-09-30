@@ -105,13 +105,24 @@
 ///----------------------------------------
 
 /**
- Synchronously set an object in the cache for a given key.
+ Synchronously set an object in the cache for a given key. Uses both memory and disk cache.
 
  @param object The object to store in the cache.
 
  @param key The key of the object.
  */
-- (void)setObject:(id <NSCopying>)object forKey:(NSString *)key;
+- (void)setObject:(id <NSCoding>)object forKey:(NSString *)key;
+
+/**
+ Synchronously set an object in the cache for a given key.
+ 
+ @param object The object to store in the cache.
+ 
+ @param key The key of the object.
+ 
+ @param useDiskCacheOnly A value indicating whether or not to store the object in memory or only write object to disk cache location.
+ */
+- (void)setObject:(id <NSCoding>)object forKey:(NSString *)key diskCacheOnly:(BOOL)useDiskCacheOnly;
 
 /**
  Remove an object from the cache.
@@ -164,7 +175,7 @@
 
  This method behaves the same as `setObject:forKey:`.
  */
-- (void)setObject:(id <NSCopying>)object forKeyedSubscript:(NSString *)key;
+- (void)setObject:(id <NSCoding>)object forKeyedSubscript:(NSString *)key;
 
 @end
 
@@ -174,6 +185,15 @@
 #import <UIKit/UIImage.h>
 
 @interface SAMCache (UIImageAdditions)
+
+/**
+ Returns the path to the raw image on disk associated with a given key.
+ 
+ @param key An object identifying the value.
+ 
+ @return Path to object on disk or `nil` if no object exists for the given `key`.
+ */
+- (NSString *)imagePathForKey:(NSString *)key;
 
 /**
  Synchronously get an image from the cache.
@@ -194,13 +214,24 @@
 - (void)imageForKey:(NSString *)key usingBlock:(void (^)(UIImage *image))block;
 
 /**
- Synchronously store a PNG representation of an image in the cache for a given key.
+ Synchronously store a PNG representation of an image in the cache for a given key. Uses both memory and disk cache.
 
  @param image The image to store in the cache.
 
  @param key The key of the image.
  */
 - (void)setImage:(UIImage *)image forKey:(NSString *)key;
+
+/**
+ Synchronously store a PNG representation of an image in the cache for a given key.
+ 
+ @param image The image to store in the cache.
+ 
+ @param key The key of the image.
+ 
+ @param useDiskCacheOnly A value indicating whether or not to store the object in memory or only write object to disk cache location.
+ */
+- (void)setImage:(UIImage *)image forKey:(NSString *)key diskCacheOnly:(BOOL)useDiskCacheOnly;
 
 /**
  Synchronously check if an image exists in the cache without retriving it.
