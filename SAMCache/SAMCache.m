@@ -202,7 +202,6 @@
 		for (NSString *path in [self.fileManager contentsOfDirectoryAtPath:self.directory error:nil]) {
 			[self.fileManager removeItemAtPath:[self.directory stringByAppendingPathComponent:path] error:nil];
 		}
-		[self.fileManager removeItemAtPath:self.directory error:nil];
 	});
 }
 
