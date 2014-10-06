@@ -105,7 +105,7 @@
 ///----------------------------------------
 
 /**
- Synchronously set an object in the cache for a given key. Uses both memory and disk cache.
+ Synchronously set an object in the memory cache for a given key, while asynchronously writing to the disk cache. Uses both memory and disk cache.
 
  @param object The object to store in the cache.
 
@@ -114,15 +114,28 @@
 - (void)setObject:(id <NSCoding>)object forKey:(NSString *)key;
 
 /**
- Synchronously set an object in the cache for a given key.
+ Synchronously set an object in the memory cache for a given key, while asynchronously writing to the disk cache. Has an option to only write asynchronously to the disk cache.
  
  @param object The object to store in the cache.
  
  @param key The key of the object.
  
- @param useDiskCacheOnly A value indicating whether or not to store the object in memory or only write object to disk cache location.
+ @param useDiskCacheOnly A value indicating whether or not to store the object in memory or only write object to disk cache location in an asynchronous fashion.
  */
 - (void)setObject:(id <NSCoding>)object forKey:(NSString *)key diskCacheOnly:(BOOL)useDiskCacheOnly;
+
+/**
+ Synchronously set an object in the memory cache for a given key, while asynchronously writing to the disk cache. Has an option to only write asynchronously to the disk cache, along with a completion block for the asynchronous write operation.
+ 
+ @param object The object to store in the cache.
+ 
+ @param key The key of the object.
+ 
+ @param useDiskCacheOnly A value indicating whether or not to store the object in memory or only write object to disk cache location in an asynchronous fashion.
+ 
+ @param withCompletion A callback block that indicates that all operations (synchronous and asynchronous) have been completed, with an indication of success for the disk wrigin operation.
+ */
+- (void)setObject:(id <NSCoding>)object forKey:(NSString *)key diskCacheOnly:(BOOL)useDiskCacheOnly withCompletion:(void (^)(BOOL didSave))block;
 
 /**
  Remove an object from the cache.

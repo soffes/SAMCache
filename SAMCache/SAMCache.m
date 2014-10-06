@@ -170,6 +170,10 @@
 }
 
 - (void)setObject:(id <NSCoding>)object forKey:(NSString *)key diskCacheOnly:(BOOL)useDiskCacheOnly {
+    [self setObject:object forKey:key diskCacheOnly:NO withCompletion:nil];
+}
+
+- (void)setObject:(id <NSCoding>)object forKey:(NSString *)key diskCacheOnly:(BOOL)useDiskCacheOnly withCompletion:(void (^)(BOOL didSave))block {
     NSParameterAssert(key);
     
 	// If there's no object, delete the key.
@@ -185,7 +189,11 @@
     
 	dispatch_async(self.diskQueue, ^{
 		// Save to disk cache
-		[NSKeyedArchiver archiveRootObject:object toFile:[self _pathForKey:key]];
+		BOOL didSave = [NSKeyedArchiver archiveRootObject:object toFile:[self _pathForKey:key]];
+        
+        if (block) {
+            block(didSave);
+        }
 	});
 }
 
