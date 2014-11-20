@@ -6,7 +6,7 @@
 //  Copyright (c) 2011-2014 Sam Soffes. All rights reserved.
 //
 
-#import <Foundation/Foundation.h>
+@import Foundation;
 
 @interface SAMCache : NSObject
 
@@ -133,9 +133,9 @@
  
  @param useDiskCacheOnly A value indicating whether or not to store the object in memory or only write object to disk cache location in an asynchronous fashion.
  
- @param withCompletion A callback block that indicates that all operations (synchronous and asynchronous) have been completed, with an indication of success for the disk wrigin operation.
+ @param completionBlock A callback block that indicates that all operations (synchronous and asynchronous) have been completed, with an indication of success for the disk wrigin operation.
  */
-- (void)setObject:(id <NSCoding>)object forKey:(NSString *)key diskCacheOnly:(BOOL)useDiskCacheOnly withCompletion:(void (^)(BOOL didSave))block;
+- (void)setObject:(id <NSCoding>)object forKey:(NSString *)key diskCacheOnly:(BOOL)useDiskCacheOnly withCompletion:(void (^)(BOOL didSave))completionBlock;
 
 /**
  Remove an object from the cache.
@@ -149,6 +149,11 @@
  */
 - (void)removeAllObjects;
 
+/**
+ Removes all cached objects from the memory cache. Does not remove disk-cache
+ entries.
+ */
+- (void)flushMemoryCache;
 
 ///-------------------------------
 /// @name Accessing the Disk Cache
@@ -195,7 +200,7 @@
 
 #if TARGET_OS_IPHONE
 
-#import <UIKit/UIImage.h>
+@import UIKit.UIImage;
 
 @interface SAMCache (UIImageAdditions)
 

@@ -170,10 +170,10 @@
 }
 
 - (void)setObject:(id <NSCoding>)object forKey:(NSString *)key diskCacheOnly:(BOOL)useDiskCacheOnly {
-    [self setObject:object forKey:key diskCacheOnly:NO withCompletion:nil];
+    [self setObject:object forKey:key diskCacheOnly:useDiskCacheOnly withCompletion:nil];
 }
 
-- (void)setObject:(id <NSCoding>)object forKey:(NSString *)key diskCacheOnly:(BOOL)useDiskCacheOnly withCompletion:(void (^)(BOOL didSave))block {
+- (void)setObject:(id <NSCoding>)object forKey:(NSString *)key diskCacheOnly:(BOOL)useDiskCacheOnly withCompletion:(void (^)(BOOL didSave))completionBlock {
     NSParameterAssert(key);
     
 	// If there's no object, delete the key.
@@ -187,12 +187,16 @@
         [self.cache setObject:object forKey:key];
     }
     
+    __weak SAMCache *weakSelf = self;
+    
 	dispatch_async(self.diskQueue, ^{
-		// Save to disk cache
-		BOOL didSave = [NSKeyedArchiver archiveRootObject:object toFile:[self _pathForKey:key]];
+        __strong SAMCache *strongSelf = weakSelf;
         
-        if (block) {
-            block(didSave);
+		// Save to disk cache
+		BOOL didSave = [NSKeyedArchiver archiveRootObject:object toFile:[strongSelf _pathForKey:key]];
+        
+        if (completionBlock) {
+            completionBlock(didSave);
         }
 	});
 }
@@ -218,6 +222,9 @@
 	});
 }
 
+- (void)flushMemoryCache {
+    [self.cache removeAllObjects];
+}
 
 #pragma mark - Accessing the Disk Cache
 
@@ -274,7 +281,7 @@
 
 #if TARGET_OS_IPHONE
 
-#import <UIKit/UIScreen.h>
+@import UIKit.UIScreen;
 
 @implementation SAMCache (UIImageAdditions)
 

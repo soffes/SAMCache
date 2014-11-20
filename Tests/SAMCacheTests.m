@@ -69,4 +69,40 @@
 	XCTAssertEqualObjects(@"subread", self.cache[@"subscriptRead"], @"Reading an object with a subscript");
 }
 
+- (void)testAddingToDiskCacheOnly {
+    [self.cache setObject:@42 forKey:@"answer" diskCacheOnly:YES];
+    
+    XCTAssertNil([self.cache.cache objectForKey:@"answer"]);
+    
+    XCTAssertEqualObjects(@42, [self.cache objectForKey:@"answer"], @"Reading from disk cache");
+    
+    XCTAssertNotNil([self.cache.cache objectForKey:@"answer"]);
+}
+
+- (void)testAddingToDiskCacheOnlyWithCallback {
+    XCTestExpectation *diskWriteExpectation = [self expectationWithDescription:@"object written to disk"];
+    
+    __weak SAMCacheTests *weakSelf = self;
+    
+    [weakSelf.cache setObject:@42 forKey:@"answer" diskCacheOnly:YES withCompletion:^(BOOL didSave) {
+        XCTAssert(didSave);
+        [diskWriteExpectation fulfill];
+    }];
+    
+    [self waitForExpectationsWithTimeout:1 handler:nil];
+}
+
+- (void)testFlushMemoryCache {
+    [self.cache setObject:@42 forKey:@"answer"];
+    XCTAssertEqualObjects(@42, [self.cache objectForKey:@"answer"], @"Reading from memory cache");
+    
+    [self.cache flushMemoryCache];
+    
+    XCTAssertNil([self.cache.cache objectForKey:@"answer"]);
+    
+    XCTAssertEqualObjects(@42, [self.cache objectForKey:@"answer"], @"Reading from disk cache");
+    
+    XCTAssertNotNil([self.cache.cache objectForKey:@"answer"]);
+}
+
 @end
