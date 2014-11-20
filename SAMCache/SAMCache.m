@@ -166,23 +166,40 @@
 #pragma mark - Adding and Removing Cached Values
 
 - (void)setObject:(id <NSCoding>)object forKey:(NSString *)key {
-	NSParameterAssert(key);
+	[self setObject:object forKey:key diskCacheOnly:NO];
+}
 
+- (void)setObject:(id <NSCoding>)object forKey:(NSString *)key diskCacheOnly:(BOOL)useDiskCacheOnly {
+    [self setObject:object forKey:key diskCacheOnly:useDiskCacheOnly withCompletion:nil];
+}
+
+- (void)setObject:(id <NSCoding>)object forKey:(NSString *)key diskCacheOnly:(BOOL)useDiskCacheOnly withCompletion:(void (^)(BOOL didSave))completionBlock {
+    NSParameterAssert(key);
+    
 	// If there's no object, delete the key.
 	if (!object) {
 		[self removeObjectForKey:key];
 		return;
 	}
-
-	// Save to memory cache
-	[self.cache setObject:object forKey:key];
-
+    
+    if (useDiskCacheOnly == NO) {
+        // Save to memory cache
+        [self.cache setObject:object forKey:key];
+    }
+    
+    __weak SAMCache *weakSelf = self;
+    
 	dispatch_async(self.diskQueue, ^{
+        __strong SAMCache *strongSelf = weakSelf;
+        
 		// Save to disk cache
-		[NSKeyedArchiver archiveRootObject:object toFile:[self _pathForKey:key]];
+		BOOL didSave = [NSKeyedArchiver archiveRootObject:object toFile:[strongSelf _pathForKey:key]];
+        
+        if (completionBlock) {
+            completionBlock(didSave);
+        }
 	});
 }
-
 
 - (void)removeObjectForKey:(NSString *)key {
 	NSParameterAssert(key);
@@ -202,10 +219,12 @@
 		for (NSString *path in [self.fileManager contentsOfDirectoryAtPath:self.directory error:nil]) {
 			[self.fileManager removeItemAtPath:[self.directory stringByAppendingPathComponent:path] error:nil];
 		}
-		[self.fileManager removeItemAtPath:self.directory error:nil];
 	});
 }
 
+- (void)flushMemoryCache {
+    [self.cache removeAllObjects];
+}
 
 #pragma mark - Accessing the Disk Cache
 
@@ -262,7 +281,7 @@
 
 #if TARGET_OS_IPHONE
 
-#import <UIKit/UIScreen.h>
+@import UIKit.UIScreen;
 
 @implementation SAMCache (UIImageAdditions)
 
@@ -319,27 +338,32 @@
 
 
 - (void)setImage:(UIImage *)image forKey:(NSString *)key {
-	NSParameterAssert(key);
+	[self setImage:image forKey:key diskCacheOnly:NO];
+}
 
+- (void)setImage:(UIImage *)image forKey:(NSString *)key diskCacheOnly:(BOOL)useDiskCacheOnly {
+    NSParameterAssert(key);
+    
 	// If there's no image, delete the key.
 	if (!image) {
 		[self removeObjectForKey:key];
 		return;
 	}
-
+    
 	key = [[self class] _keyForImageKey:key];
-
+    
 	dispatch_async(self.diskQueue, ^{
 		NSString *path = [self _pathForKey:key];
-
-		// Save to memory cache
-		[self.cache setObject:image forKey:key];
-
+        
+        if (useDiskCacheOnly == NO) {
+            // Save to memory cache
+            [self.cache setObject:image forKey:key];
+        }
+		
 		// Save to disk cache
 		[UIImagePNGRepresentation(image) writeToFile:path atomically:YES];
 	});
 }
-
 
 - (BOOL)imageExistsForKey:(NSString *)key {
 	NSParameterAssert(key);
