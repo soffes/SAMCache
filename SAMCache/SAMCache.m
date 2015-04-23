@@ -284,9 +284,10 @@
 
 	// Load object from disk
 	image = [UIImage imageWithContentsOfFile:path];
-
-	// Store in cache
-	[self.cache setObject:image forKey:key];
+    if (image) {
+        // Store in cache
+        [self.cache setObject:image forKey:key];
+    }
 
 	return image;
 }
