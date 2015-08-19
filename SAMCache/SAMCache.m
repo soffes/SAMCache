@@ -375,7 +375,13 @@
 
 + (NSString *)_keyForImageKey:(NSString *)imageKey {
 	NSParameterAssert(imageKey);
-	NSString *scale = [[UIScreen mainScreen] scale] == 2.0f ? @"@2x" : @"";
+    CGFloat screenScale = [[UIScreen mainScreen] scale];
+    NSString *scale = @"@3x";
+    if(screenScale == 2.0f){
+        scale = @"@2x";
+    }else if(screenScale == 1.0f){
+        scale = @"";
+    }
 	return [imageKey stringByAppendingFormat:@"%@.png", scale];
 }
 
