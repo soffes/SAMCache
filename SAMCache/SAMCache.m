@@ -211,6 +211,10 @@
 	});
 }
 
+- (void)unloadAllObjects {
+	[self.cache removeAllObjects];
+}
+
 
 #pragma mark - Accessing the Disk Cache
 

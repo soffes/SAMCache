@@ -125,6 +125,11 @@
  */
 - (void)removeAllObjects;
 
+/**
+ Remove all objects from the memory (but keep on disk).
+ */
+- (void)unloadAllObjects;
+
 
 ///-------------------------------
 /// @name Accessing the Disk Cache
